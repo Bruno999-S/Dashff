@@ -425,7 +425,10 @@
   }
 
   if (SHEET_CSV_URL) {
-    fetch(SHEET_CSV_URL)
+    // cache-buster: evita que o navegador e o CDN do Google sirvam uma cópia
+    // antiga do CSV depois que a planilha muda (edição/exclusão de linhas).
+    const bustedUrl = SHEET_CSV_URL + (SHEET_CSV_URL.includes("?") ? "&" : "?") + "_=" + Date.now();
+    fetch(bustedUrl, { cache: "no-store" })
       .then(r => r.text())
       .then(text => init(parseCSV(text), "Google Sheets (link publicado)"))
       .catch(() => init(SAMPLE_DATA, "amostra embutida — falha ao buscar a planilha, veja SHEET_CSV_URL"));
