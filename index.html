@@ -353,6 +353,15 @@
     if (m) return `${m[1]}-${m[2].padStart(2,"0")}-${m[3].padStart(2,"0")}`;
     m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
     if (m) return `${m[3]}-${m[2].padStart(2,"0")}-${m[1].padStart(2,"0")}`;
+    // Google Sheets raw serial date number (e.g. "46252"), written when a cell
+    // skips the sheet's date formatting — day 0 = 1899-12-30. Range guard keeps
+    // this from misfiring on an unrelated 5-digit string (covers ~2009-2036).
+    m = s.match(/^(\d{5})(?:\.\d+)?$/);
+    if (m && +m[1] >= 40000 && +m[1] <= 50000) {
+      const epochMs = Date.UTC(1899, 11, 30);
+      const d = new Date(epochMs + Number(m[1]) * 86400000);
+      return `${d.getUTCFullYear()}-${String(d.getUTCMonth()+1).padStart(2,"0")}-${String(d.getUTCDate()).padStart(2,"0")}`;
+    }
     return s;
   }
 
