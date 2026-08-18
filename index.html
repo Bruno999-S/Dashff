@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-BR" data-theme="dark">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -24,20 +24,28 @@
     --series-compras:     #e87ba4;
     --series-saude:       #008300;
     --series-outros:      #8f8a7c;
+    --accent:         #2a78d6;
+    --accent-2:       #e87ba4;
+    --glow:           transparent;
+    --glow-strong:    transparent;
+    --card-bg:        var(--surface-1);
+    --card-blur:      0px;
+    --bg-glow-1:      transparent;
+    --bg-glow-2:      transparent;
   }
   @media (prefers-color-scheme: dark) {
     :root:where(:not([data-theme="light"])) .viz-root {
       color-scheme: dark;
-      --surface-1:      #1a1a19;
-      --page-plane:     #0d0d0d;
-      --text-primary:   #ffffff;
-      --text-secondary: #c3c2b7;
-      --text-muted:     #898781;
-      --grid:           #2c2c2a;
-      --axis:           #383835;
-      --border:         rgba(255,255,255,0.10);
+      --surface-1:      #12141a;
+      --page-plane:     #05070a;
+      --text-primary:   #f5f7fb;
+      --text-secondary: #b9c2d0;
+      --text-muted:     #7c8698;
+      --grid:           #232838;
+      --axis:           #34405a;
+      --border:         rgba(90,220,255,0.32);
       --delta-good:     #0ca30c;
-      --status-critical:#d03b3b;
+      --status-critical:#ff4d6d;
       --status-good:    #0ca30c;
       --series-alimentacao: #3987e5;
       --series-transporte:  #199e70;
@@ -45,59 +53,86 @@
       --series-compras:     #d55181;
       --series-saude:       #008300;
       --series-outros:      #a6a196;
+      --accent:         #22e5ff;
+      --accent-2:       #ff2e8a;
+      --glow:           rgba(34,229,255,0.24);
+      --glow-strong:    rgba(34,229,255,0.45);
+      --card-bg:        rgba(18,20,26,0.66);
+      --card-blur:      14px;
+      --bg-glow-1:      rgba(34,229,255,0.10);
+      --bg-glow-2:      rgba(255,46,138,0.08);
     }
   }
   :root[data-theme="dark"] .viz-root {
     color-scheme: dark;
-    --surface-1:      #1a1a19;
-    --page-plane:     #0d0d0d;
-    --text-primary:   #ffffff;
-    --text-secondary: #c3c2b7;
-    --text-muted:     #898781;
-    --grid:           #2c2c2a;
-    --axis:           #383835;
-    --border:         rgba(255,255,255,0.10);
+    --surface-1:      #12141a;
+    --page-plane:     #05070a;
+    --text-primary:   #f5f7fb;
+    --text-secondary: #b9c2d0;
+    --text-muted:     #7c8698;
+    --grid:           #232838;
+    --axis:           #34405a;
+    --border:         rgba(90,220,255,0.32);
     --delta-good:     #0ca30c;
-    --status-critical:#d03b3b;
+    --status-critical:#ff4d6d;
     --status-good:    #0ca30c;
     --series-alimentacao: #3987e5;
-    --series-moradia:     #d95926;
     --series-transporte:  #199e70;
     --series-lazer:       #c98500;
     --series-compras:     #d55181;
     --series-saude:       #008300;
-    --series-educacao:    #9085e9;
-    --series-assinaturas: #e66767;
+    --series-outros:      #a6a196;
+    --accent:         #22e5ff;
+    --accent-2:       #ff2e8a;
+    --glow:           rgba(34,229,255,0.24);
+    --glow-strong:    rgba(34,229,255,0.45);
+    --card-bg:        rgba(18,20,26,0.66);
+    --card-blur:      14px;
+    --bg-glow-1:      rgba(34,229,255,0.10);
+    --bg-glow-2:      rgba(255,46,138,0.08);
   }
 
   * { box-sizing: border-box; }
   html, body { margin: 0; padding: 0; }
   body {
     font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
-    background: var(--page-plane);
-    color: var(--text-primary);
+    background: #f9f9f7;
+    color: #0b0b0b;
   }
-  .viz-root { padding: 28px 32px 60px; max-width: 1180px; margin: 0 auto; }
+  @media (prefers-color-scheme: dark) {
+    html:where(:not([data-theme="light"])) body { background: #05070a; color: #f5f7fb; }
+  }
+  html[data-theme="dark"] body { background: #05070a; color: #f5f7fb; }
+  .viz-root { padding: 28px 32px 60px; max-width: 1180px; margin: 0 auto; position: relative; }
+  .viz-root::before {
+    content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none;
+    background:
+      radial-gradient(560px 420px at 8% -6%, var(--bg-glow-1), transparent 60%),
+      radial-gradient(560px 420px at 96% 12%, var(--bg-glow-2), transparent 60%);
+  }
 
   header.top { margin-bottom: 20px; }
-  header.top h1 { font-size: 22px; margin: 0 0 4px; font-weight: 600; }
+  header.top h1 { font-size: 22px; margin: 0 0 4px; font-weight: 600; text-shadow: 0 0 22px var(--glow); }
   header.top p { margin: 0; color: var(--text-secondary); font-size: 13.5px; }
   .badge {
     display: inline-block; font-size: 11.5px; font-weight: 600; padding: 3px 8px;
-    border-radius: 5px; background: var(--surface-1); border: 1px solid var(--border);
-    color: var(--text-muted); margin-left: 8px; vertical-align: middle;
+    border-radius: 5px; background: var(--card-bg); border: 1px solid var(--border);
+    color: var(--accent); margin-left: 8px; vertical-align: middle;
+    box-shadow: 0 0 14px var(--glow);
   }
   .theme-toggle {
     position: absolute; top: 28px; right: 32px; font-size: 12px; color: var(--text-muted);
-    background: var(--surface-1); border: 1px solid var(--border); border-radius: 6px;
-    padding: 5px 10px; cursor: pointer;
+    background: var(--card-bg); border: 1px solid var(--border); border-radius: 6px;
+    padding: 5px 10px; cursor: pointer; backdrop-filter: blur(var(--card-blur));
+    box-shadow: 0 0 14px var(--glow);
   }
 
   /* filter row */
   .filters {
     display: flex; align-items: center; gap: 10px; margin-bottom: 20px;
-    padding: 10px 14px; background: var(--surface-1); border: 1px solid var(--border);
-    border-radius: 10px;
+    padding: 10px 14px; background: var(--card-bg); border: 1px solid var(--border);
+    border-radius: 10px; backdrop-filter: blur(var(--card-blur));
+    box-shadow: 0 0 20px var(--glow);
   }
   .filters label { font-size: 12.5px; color: var(--text-secondary); font-weight: 600; }
   .filters select {
@@ -109,11 +144,17 @@
   /* stat tiles */
   .kpi-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 22px; }
   .tile {
-    background: var(--surface-1); border: 1px solid var(--border); border-radius: 12px;
-    padding: 14px 16px;
+    background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px;
+    padding: 14px 16px; backdrop-filter: blur(var(--card-blur));
+    box-shadow: 0 0 26px var(--glow), inset 0 1px 0 rgba(255,255,255,0.03);
+    position: relative; overflow: hidden;
+  }
+  .tile::before {
+    content: ""; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+    background: linear-gradient(90deg, var(--accent), var(--accent-2)); opacity: .55;
   }
   .tile .label { font-size: 12px; color: var(--text-secondary); margin-bottom: 6px; }
-  .tile .value { font-size: 24px; font-weight: 600; font-variant-numeric: proportional-nums; }
+  .tile .value { font-size: 24px; font-weight: 600; font-variant-numeric: proportional-nums; text-shadow: 0 0 18px var(--glow); }
   .tile .delta { font-size: 12.5px; margin-top: 5px; display: flex; align-items: center; gap: 4px; }
   .tile .delta.up { color: var(--status-critical); }
   .tile .delta.down { color: var(--delta-good); }
@@ -122,8 +163,9 @@
 
   /* chart cards */
   .card {
-    background: var(--surface-1); border: 1px solid var(--border); border-radius: 12px;
-    padding: 18px 20px 14px; margin-bottom: 18px;
+    background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px;
+    padding: 18px 20px 14px; margin-bottom: 18px; backdrop-filter: blur(var(--card-blur));
+    box-shadow: 0 0 32px var(--glow), inset 0 1px 0 rgba(255,255,255,0.03);
   }
   .card-head { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 4px; }
   .card-head h2 { font-size: 15px; margin: 0; font-weight: 600; }
@@ -132,11 +174,15 @@
     font-size: 11.5px; color: var(--text-secondary); background: none; border: 1px solid var(--border);
     border-radius: 6px; padding: 3px 8px; cursor: pointer;
   }
-  .table-toggle:hover { background: var(--page-plane); }
+  .table-toggle:hover { background: var(--page-plane); border-color: var(--accent); color: var(--accent); }
   svg text { fill: var(--text-secondary); font-size: 11.5px; font-family: inherit; }
   svg .axis-line { stroke: var(--axis); }
   svg .grid-line { stroke: var(--grid); }
   svg .muted { fill: var(--text-muted); }
+  :root[data-theme="dark"] .viz-root svg .glow-mark { filter: drop-shadow(0 0 5px var(--glow-strong)); }
+  @media (prefers-color-scheme: dark) {
+    :root:where(:not([data-theme="light"])) .viz-root svg .glow-mark { filter: drop-shadow(0 0 5px var(--glow-strong)); }
+  }
 
   .legend { display: flex; flex-wrap: wrap; gap: 12px; margin: 10px 0 4px; }
   .legend-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text-secondary); }
@@ -150,7 +196,7 @@
   .simple-table td { padding: 7px 8px; border-bottom: 1px solid var(--grid); font-variant-numeric: tabular-nums; }
   .simple-table td.num { text-align: right; }
   .simple-table tr:last-child td { border-bottom: none; }
-  .cat-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 6px; }
+  .cat-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 6px; box-shadow: 0 0 6px currentColor; }
   .origem-tag { font-size: 10.5px; padding: 2px 6px; border-radius: 4px; background: var(--page-plane); color: var(--text-muted); border: 1px solid var(--border); }
 
   .tooltip {
@@ -165,19 +211,25 @@
   .chart-wrap { position: relative; }
   .hidden { display: none !important; }
 
+  /* donut chart */
+  .donut-wrap { display: flex; align-items: center; gap: 28px; flex-wrap: wrap; }
+  .donut-total { font-size: 20px; font-weight: 700; font-variant-numeric: proportional-nums; fill: var(--text-primary); }
+  .donut-total-label { font-size: 11px; fill: var(--text-muted); }
+
   footer.note { font-size: 12px; color: var(--text-muted); margin-top: 8px; line-height: 1.5; }
-  footer.note code { background: var(--surface-1); padding: 1px 5px; border-radius: 4px; border: 1px solid var(--border); }
+  footer.note code { background: var(--card-bg); padding: 1px 5px; border-radius: 4px; border: 1px solid var(--border); }
 
   @media (max-width: 760px) {
     .kpi-row { grid-template-columns: repeat(2, 1fr); }
     .filters { flex-wrap: wrap; }
     .filters .scope-note { margin-left: 0; width: 100%; }
+    .donut-wrap { justify-content: center; }
   }
 </style>
 </head>
 <body>
 <div class="viz-root" id="vizRoot">
-  <button class="theme-toggle" id="themeToggle" type="button">🌙 Modo escuro</button>
+  <button class="theme-toggle" id="themeToggle" type="button">☀️ Modo claro</button>
   <header class="top">
     <h1>Dashboard Financeiro <span class="badge" id="dataBadge">dados de exemplo</span></h1>
     <p>O que eu gasto, com quem eu gasto, quanto eu gasto — atualizado a partir da planilha alimentada pelo bot do Telegram.</p>
@@ -190,6 +242,15 @@
   </div>
 
   <div class="kpi-row" id="kpiRow"></div>
+
+  <div class="card">
+    <div class="card-head">
+      <h2 id="donutChartTitle">Distribuição do mês</h2>
+      <button class="table-toggle" data-target="donutChart">Ver tabela</button>
+    </div>
+    <div class="cap">Participação de cada categoria no total gasto no mês selecionado</div>
+    <div class="chart-wrap donut-wrap" id="donutChart"></div>
+  </div>
 
   <div class="card">
     <div class="card-head">
@@ -394,7 +455,62 @@
       const mk = monthSelect.value;
       const idx = months.indexOf(mk);
       renderKPIs(mk, idx);
+      renderDonut(mk);
       renderCategoryBar(mk);
+    }
+
+    // ---------------- Donut chart (selected month) ----------------
+    function renderDonut(mk) {
+      document.getElementById("donutChartTitle").textContent = `Distribuição do mês — ${monthLabel(mk)}`;
+      const totals = categoryTotalsForMonth(mk);
+      const entries = Object.entries(totals).sort((a, b) => b[1] - a[1]);
+      const total = entries.reduce((s, [, v]) => s + v, 0);
+      const size = 220, cx = size / 2, cy = size / 2, rOuter = 92, rInner = 58;
+      const gapDeg = entries.length > 1 ? 1.6 : 0;
+
+      const arcPath = (startDeg, endDeg, rO, rI) => {
+        const toXY = (deg, r) => {
+          const rad = (deg - 90) * Math.PI / 180;
+          return [cx + r * Math.cos(rad), cy + r * Math.sin(rad)];
+        };
+        const large = (endDeg - startDeg) > 180 ? 1 : 0;
+        const [x1, y1] = toXY(startDeg, rO), [x2, y2] = toXY(endDeg, rO);
+        const [x3, y3] = toXY(endDeg, rI), [x4, y4] = toXY(startDeg, rI);
+        return `M ${x1.toFixed(2)},${y1.toFixed(2)} A ${rO},${rO} 0 ${large} 1 ${x2.toFixed(2)},${y2.toFixed(2)} L ${x3.toFixed(2)},${y3.toFixed(2)} A ${rI},${rI} 0 ${large} 0 ${x4.toFixed(2)},${y4.toFixed(2)} Z`;
+      };
+
+      let svg = `<svg viewBox="0 0 ${size} ${size}" width="${size}" height="${size}" role="img" aria-label="Distribuição do gasto por categoria em ${monthLabel(mk)}" style="flex:none">`;
+      if (!total || !entries.length) {
+        svg += `<circle cx="${cx}" cy="${cy}" r="${rOuter}" fill="none" stroke="${cssVar('--grid')}" stroke-width="${rOuter - rInner}"></circle>`;
+      } else {
+        let cursor = 0;
+        entries.forEach(([cat, val]) => {
+          const sweep = (val / total) * 360;
+          const start = cursor + (gapDeg / 2);
+          const end = cursor + sweep - (gapDeg / 2);
+          if (end > start) {
+            svg += `<path class="donut-hit glow-mark" data-cat="${escAttr(cat)}" data-val="${val}" data-pct="${((val/total)*100).toFixed(1)}" d="${arcPath(start, end, rOuter, rInner)}" fill="${catColor(cat)}" style="cursor:pointer"></path>`;
+          }
+          cursor += sweep;
+        });
+      }
+      svg += `<text x="${cx}" y="${cy - 4}" text-anchor="middle" class="donut-total">${brlCompact(total)}</text>`;
+      svg += `<text x="${cx}" y="${cy + 14}" text-anchor="middle" class="donut-total-label">total do mês</text>`;
+      svg += `</svg>`;
+
+      const legendHTML = `<div class="legend">${entries.map(([cat, val]) => `
+        <div class="legend-item"><span class="legend-swatch" style="background:${catColor(cat)}"></span>${escXML(cat)} · ${((val/total)*100).toFixed(0)}%</div>
+      `).join("")}</div>`;
+
+      const wrap = document.getElementById("donutChart");
+      wrap.innerHTML = svg + legendHTML;
+
+      wrap.querySelectorAll(".donut-hit").forEach(p => {
+        p.addEventListener("pointermove", (e) => showTooltip(e, [{ label: `${p.dataset.cat} (${p.dataset.pct}%)`, value: brl(+p.dataset.val), color: catColor(p.dataset.cat) }]));
+        p.addEventListener("pointerleave", hideTooltip);
+      });
+
+      buildTableTwin("donutChart", ["Categoria", "Valor", "% do mês"], entries.map(([cat, val]) => [cat, brl(val), `${((val/total)*100).toFixed(1)}%`]));
     }
 
     function renderKPIs(mk, idx) {
@@ -449,7 +565,7 @@
         const color = catColor(cat);
         svg += `<text x="${leftPad - 10}" y="${y + barH/2 + 4}" text-anchor="end">${escXML(cat)}</text>`;
         svg += `<g class="bar-hit" data-cat="${escAttr(cat)}" data-val="${val}" style="cursor:pointer">`;
-        svg += `<rect x="${leftPad}" y="${y}" width="${barW}" height="${barH}" rx="4" fill="${color}"></rect>`;
+        svg += `<rect class="glow-mark" x="${leftPad}" y="${y}" width="${barW}" height="${barH}" rx="4" fill="${color}"></rect>`;
         svg += `<rect x="${leftPad}" y="${y}" width="${Math.max(barW, 60)}" height="${barH}" fill="transparent"></rect>`;
         svg += `</g>`;
         const labelX = leftPad + barW + 8;
@@ -489,9 +605,9 @@
       let path = "";
       months.forEach((mk, i) => { path += (i === 0 ? "M" : "L") + x(i).toFixed(1) + "," + y(monthTotals[i]).toFixed(1) + " "; });
       const color = cssVar("--series-alimentacao");
-      svg += `<path d="${path}" fill="none" stroke="${color}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"></path>`;
+      svg += `<path class="glow-mark" d="${path}" fill="none" stroke="${color}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"></path>`;
       months.forEach((mk, i) => {
-        svg += `<circle cx="${x(i)}" cy="${y(monthTotals[i])}" r="4" fill="${color}" stroke="${cssVar('--surface-1')}" stroke-width="2"></circle>`;
+        svg += `<circle class="glow-mark" cx="${x(i)}" cy="${y(monthTotals[i])}" r="4" fill="${color}" stroke="${cssVar('--surface-1')}" stroke-width="2"></circle>`;
       });
       svg += `<line id="crosshair" x1="0" x2="0" y1="${padT}" y2="${padT+plotH}" stroke="${cssVar('--axis')}" stroke-width="1" style="display:none"></line>`;
       svg += `<rect id="trendHit" x="${padL}" y="${padT}" width="${plotW}" height="${plotH}" fill="transparent"></rect>`;
@@ -544,7 +660,7 @@
           const segH = Math.max(0, (val / max) * plotH - gapPx);
           const segY = yCursor - segH;
           svg += `<g class="seg-hit" data-cat="${escAttr(cat)}" data-val="${val}" data-month="${escAttr(monthLabel(mk))}" style="cursor:pointer">`;
-          svg += `<rect x="${cx}" y="${segY}" width="${barW}" height="${segH}" fill="${catColor(cat)}"></rect>`;
+          svg += `<rect class="glow-mark" x="${cx}" y="${segY}" width="${barW}" height="${segH}" fill="${catColor(cat)}"></rect>`;
           svg += `</g>`;
           yCursor -= (segH + gapPx);
         });
