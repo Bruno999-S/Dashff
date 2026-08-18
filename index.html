@@ -285,6 +285,16 @@
   // ---------------------------------------------------------------------
   // Carregamento e parsing de dados (embutido ou CSV publicado do Sheets)
   // ---------------------------------------------------------------------
+  function normalizeDate(raw) {
+    if (!raw) return "";
+    const s = String(raw).trim();
+    let m = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+    if (m) return `${m[1]}-${m[2].padStart(2,"0")}-${m[3].padStart(2,"0")}`;
+    m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+    if (m) return `${m[3]}-${m[2].padStart(2,"0")}-${m[1].padStart(2,"0")}`;
+    return s;
+  }
+
   function parseNumeroBR(raw) {
     if (typeof raw === "number") return raw;
     let s = String(raw).trim().replace(/[R$\s]/g, "");
@@ -317,7 +327,7 @@
       const rec = {};
       headers.forEach((h, idx) => rec[h] = r[idx] !== undefined ? r[idx].trim() : "");
       return {
-        data: rec.data || rec.date,
+        data: normalizeDate(rec.data || rec.date),
         categoria: rec.categoria || rec.category,
         descricao: rec.descricao || rec["descrição"] || rec.description,
         valor: parseNumeroBR(rec.valor || rec.value),
