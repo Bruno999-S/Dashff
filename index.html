@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard Financeiro — Bruno</title>
+<style>
+  :root { color-scheme: light; }
+  .viz-root {
+    --surface-1:      #fcfcfb;
+    --page-plane:     #f9f9f7;
+    --text-primary:   #0b0b0b;
+    --text-secondary: #52514e;
+    --text-muted:     #898781;
+    --grid:           #e1e0d9;
+    --axis:           #c3c2b7;
+    --border:         rgba(11,11,11,0.10);
+    --delta-good:     #006300;
+    --status-critical:#d03b3b;
+    --status-good:    #0ca30c;
+    --series-alimentacao: #2a78d6;
+    --series-transporte:  #1baf7a;
+    --series-lazer:       #eda100;
+    --series-compras:     #e87ba4;
+    --series-saude:       #008300;
+    --series-outros:      #8f8a7c;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:where(:not([data-theme="light"])) .viz-root {
+      color-scheme: dark;
+      --surface-1:      #1a1a19;
+      --page-plane:     #0d0d0d;
+      --text-primary:   #ffffff;
+      --text-secondary: #c3c2b7;
+      --text-muted:     #898781;
+      --grid:           #2c2c2a;
+      --axis:           #383835;
+      --border:         rgba(255,255,255,0.10);
+      --delta-good:     #0ca30c;
+      --status-critical:#d03b3b;
+      --status-good:    #0ca30c;
+      --series-alimentacao: #3987e5;
+      --series-transporte:  #199e70;
+      --series-lazer:       #c98500;
+      --series-compras:     #d55181;
+      --series-saude:       #008300;
+      --series-outros:      #a6a196;
+    }
+  }
+  :root[data-theme="dark"] .viz-root {
+    color-scheme: dark;
+    --surface-1:      #1a1a19;
+    --page-plane:     #0d0d0d;
+    --text-primary:   #ffffff;
+    --text-secondary: #c3c2b7;
+    --text-muted:     #898781;
+    --grid:           #2c2c2a;
+    --axis:           #383835;
+    --border:         rgba(255,255,255,0.10);
+    --delta-good:     #0ca30c;
+    --status-critical:#d03b3b;
+    --status-good:    #0ca30c;
+    --series-alimentacao: #3987e5;
+    --series-moradia:     #d95926;
+    --series-transporte:  #199e70;
+    --series-lazer:       #c98500;
+    --series-compras:     #d55181;
+    --series-saude:       #008300;
+    --series-educacao:    #9085e9;
+    --series-assinaturas: #e66767;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    background: var(--page-plane);
+    color: var(--text-primary);
+  }
+  .viz-root { padding: 28px 32px 60px; max-width: 1180px; margin: 0 auto; }
+
+  header.top { margin-bottom: 20px; }
+  header.top h1 { font-size: 22px; margin: 0 0 4px; font-weight: 600; }
+  header.top p { margin: 0; color: var(--text-secondary); font-size: 13.5px; }
+  .badge {
+    display: inline-block; font-size: 11.5px; font-weight: 600; padding: 3px 8px;
+    border-radius: 5px; background: var(--surface-1); border: 1px solid var(--border);
+    color: var(--text-muted); margin-left: 8px; vertical-align: middle;
+  }
+  .theme-toggle {
+    position: absolute; top: 28px; right: 32px; font-size: 12px; color: var(--text-muted);
+    background: var(--surface-1); border: 1px solid var(--border); border-radius: 6px;
+    padding: 5px 10px; cursor: pointer;
+  }
+
+  /* filter row */
+  .filters {
+    display: flex; align-items: center; gap: 10px; margin-bottom: 20px;
+    padding: 10px 14px; background: var(--surface-1); border: 1px solid var(--border);
+    border-radius: 10px;
+  }
+  .filters label { font-size: 12.5px; color: var(--text-secondary); font-weight: 600; }
+  .filters select {
+    font: inherit; font-size: 13.5px; padding: 5px 8px; border-radius: 6px;
+    border: 1px solid var(--border); background: var(--page-plane); color: var(--text-primary);
+  }
+  .filters .scope-note { font-size: 12px; color: var(--text-muted); margin-left: auto; }
+
+  /* stat tiles */
+  .kpi-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 22px; }
+  .tile {
+    background: var(--surface-1); border: 1px solid var(--border); border-radius: 12px;
+    padding: 14px 16px;
+  }
+  .tile .label { font-size: 12px; color: var(--text-secondary); margin-bottom: 6px; }
+  .tile .value { font-size: 24px; font-weight: 600; font-variant-numeric: proportional-nums; }
+  .tile .delta { font-size: 12.5px; margin-top: 5px; display: flex; align-items: center; gap: 4px; }
+  .tile .delta.up { color: var(--status-critical); }
+  .tile .delta.down { color: var(--delta-good); }
+  .tile .delta .ref { color: var(--text-muted); font-weight: 400; }
+  .tile .sub { font-size: 12px; color: var(--text-muted); margin-top: 5px; }
+
+  /* chart cards */
+  .card {
+    background: var(--surface-1); border: 1px solid var(--border); border-radius: 12px;
+    padding: 18px 20px 14px; margin-bottom: 18px;
+  }
+  .card-head { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 4px; }
+  .card-head h2 { font-size: 15px; margin: 0; font-weight: 600; }
+  .card-head .cap { font-size: 12px; color: var(--text-muted); }
+  .table-toggle {
+    font-size: 11.5px; color: var(--text-secondary); background: none; border: 1px solid var(--border);
+    border-radius: 6px; padding: 3px 8px; cursor: pointer;
+  }
+  .table-toggle:hover { background: var(--page-plane); }
+  svg text { fill: var(--text-secondary); font-size: 11.5px; font-family: inherit; }
+  svg .axis-line { stroke: var(--axis); }
+  svg .grid-line { stroke: var(--grid); }
+  svg .muted { fill: var(--text-muted); }
+
+  .legend { display: flex; flex-wrap: wrap; gap: 12px; margin: 10px 0 4px; }
+  .legend-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text-secondary); }
+  .legend-swatch { width: 9px; height: 9px; border-radius: 2px; display: inline-block; }
+
+  .simple-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .simple-table th {
+    text-align: left; font-size: 11px; color: var(--text-muted); font-weight: 600;
+    text-transform: uppercase; letter-spacing: .02em; padding: 6px 8px; border-bottom: 1px solid var(--border);
+  }
+  .simple-table td { padding: 7px 8px; border-bottom: 1px solid var(--grid); font-variant-numeric: tabular-nums; }
+  .simple-table td.num { text-align: right; }
+  .simple-table tr:last-child td { border-bottom: none; }
+  .cat-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 6px; }
+  .origem-tag { font-size: 10.5px; padding: 2px 6px; border-radius: 4px; background: var(--page-plane); color: var(--text-muted); border: 1px solid var(--border); }
+
+  .tooltip {
+    position: absolute; pointer-events: none; background: var(--text-primary); color: var(--surface-1);
+    font-size: 12px; padding: 7px 10px; border-radius: 7px; opacity: 0; transition: opacity .08s;
+    z-index: 10; white-space: nowrap; box-shadow: 0 4px 14px rgba(0,0,0,.18);
+  }
+  .tooltip .t-value { font-weight: 700; }
+  .tooltip .t-row { display: flex; align-items: center; gap: 6px; }
+  .tooltip .t-key { width: 10px; height: 2px; border-radius: 1px; display: inline-block; }
+
+  .chart-wrap { position: relative; }
+  .hidden { display: none !important; }
+
+  footer.note { font-size: 12px; color: var(--text-muted); margin-top: 8px; line-height: 1.5; }
+  footer.note code { background: var(--surface-1); padding: 1px 5px; border-radius: 4px; border: 1px solid var(--border); }
+
+  @media (max-width: 760px) {
+    .kpi-row { grid-template-columns: repeat(2, 1fr); }
+    .filters { flex-wrap: wrap; }
+    .filters .scope-note { margin-left: 0; width: 100%; }
+  }
+</style>
+</head>
+<body>
+<div class="viz-root" id="vizRoot">
+  <button class="theme-toggle" id="themeToggle" type="button">🌙 Modo escuro</button>
+  <header class="top">
+    <h1>Dashboard Financeiro <span class="badge" id="dataBadge">dados de exemplo</span></h1>
+    <p>O que eu gasto, com quem eu gasto, quanto eu gasto — atualizado a partir da planilha alimentada pelo bot do Telegram.</p>
+  </header>
+
+  <div class="filters">
+    <label for="monthSelect">Mês em foco</label>
+    <select id="monthSelect"></select>
+    <span class="scope-note">Afeta os cartões e o gráfico de categorias abaixo. A evolução mensal e a composição por mês sempre mostram o histórico completo carregado.</span>
+  </div>
+
+  <div class="kpi-row" id="kpiRow"></div>
+
+  <div class="card">
+    <div class="card-head">
+      <h2 id="catChartTitle">Gasto por categoria</h2>
+      <button class="table-toggle" data-target="catChart">Ver tabela</button>
+    </div>
+    <div class="cap">Ordenado do maior para o menor gasto no mês selecionado</div>
+    <div class="chart-wrap" id="catChart"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-head">
+      <h2>Evolução do gasto total</h2>
+      <button class="table-toggle" data-target="trendChart">Ver tabela</button>
+    </div>
+    <div class="cap">Total gasto por mês, últimos meses carregados</div>
+    <div class="chart-wrap" id="trendChart"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-head">
+      <h2>Composição do gasto por categoria, mês a mês</h2>
+      <button class="table-toggle" data-target="stackChart">Ver tabela</button>
+    </div>
+    <div class="cap">Cada barra é um mês; os segmentos mostram quanto foi gasto em cada categoria</div>
+    <div class="chart-wrap" id="stackChart"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-head">
+      <h2>Últimos lançamentos</h2>
+    </div>
+    <div class="cap">Os 15 gastos mais recentes registrados</div>
+    <div id="recentTable"></div>
+  </div>
+
+  <footer class="note">
+    Fonte dos dados: <code id="sourceNote">amostra embutida (SAMPLE_DATA)</code>. Para ligar o dashboard à sua planilha real do
+    Google Sheets, publique a aba "Gastos" como CSV (Arquivo → Compartilhar → Publicar na Web → CSV) e cole o link na
+    constante <code>SHEET_CSV_URL</code> no início do script. A partir daí, toda vez que você abrir este dashboard ele
+    busca a versão mais recente da planilha automaticamente.
+  </footer>
+
+  <div class="tooltip" id="tooltip"></div>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  // ---------------------------------------------------------------------
+  // CONFIGURAÇÃO — cole aqui o link CSV publicado da sua Google Sheet
+  // (Arquivo → Compartilhar → Publicar na Web → escolher a aba "Gastos" → formato CSV)
+  // Deixe em branco para usar os dados de exemplo abaixo.
+  // ---------------------------------------------------------------------
+  const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSHYBuk_atWut7Tr45IHqzBI2D8fvrbqTvcMu25GMQknJ8N86BnNVis8Ibp5J82dhYgow8vPJa5l8cv/pub?gid=0&single=true&output=csv";
+
+  const CATS = [
+    { nome: "Alimentação",     cor: "--series-alimentacao" },
+    { nome: "Transporte",      cor: "--series-transporte" },
+    { nome: "Lazer",           cor: "--series-lazer" },
+    { nome: "Saúde/bem-estar", cor: "--series-saude" },
+    { nome: "Compras/pessoal", cor: "--series-compras" },
+    { nome: "Outros",          cor: "--series-outros" },
+  ];
+  const CAT_ORDER = CATS.map(c => c.nome);
+  const OUTROS_COR = "--series-outros";
+
+  const SAMPLE_DATA = [{"data": "2026-06-02", "categoria": "Alimentação", "descricao": "Pão de Açúcar", "valor": 21.45, "origem": "telegram"}, {"data": "2026-06-03", "categoria": "Transporte", "descricao": "Estacionamento", "valor": 12.26, "origem": "telegram"}, {"data": "2026-06-04", "categoria": "Compras/pessoal", "descricao": "Livraria", "valor": 63.43, "origem": "telegram"}, {"data": "2026-06-05", "categoria": "Compras/pessoal", "descricao": "Shopee", "valor": 188.1, "origem": "telegram"}, {"data": "2026-06-07", "categoria": "Alimentação", "descricao": "Padaria", "valor": 56.75, "origem": "telegram"}, {"data": "2026-06-11", "categoria": "Saúde/bem-estar", "descricao": "Farmácia", "valor": 57.46, "origem": "telegram"}, {"data": "2026-06-12", "categoria": "Compras/pessoal", "descricao": "Livraria", "valor": 250.35, "origem": "telegram"}, {"data": "2026-06-13", "categoria": "Compras/pessoal", "descricao": "Livraria", "valor": 184.23, "origem": "telegram"}, {"data": "2026-06-17", "categoria": "Alimentação", "descricao": "iFood", "valor": 56.08, "origem": "telegram"}, {"data": "2026-06-18", "categoria": "Compras/pessoal", "descricao": "Farmácia (produtos)", "valor": 85.61, "origem": "telegram"}, {"data": "2026-06-19", "categoria": "Saúde/bem-estar", "descricao": "Consulta", "valor": 156.75, "origem": "telegram"}, {"data": "2026-06-21", "categoria": "Lazer", "descricao": "Bar", "valor": 59.75, "origem": "telegram"}, {"data": "2026-06-26", "categoria": "Alimentação", "descricao": "Mercado", "valor": 58.08, "origem": "manual"}, {"data": "2026-07-03", "categoria": "Saúde/bem-estar", "descricao": "Farmácia", "valor": 119.88, "origem": "telegram"}, {"data": "2026-07-04", "categoria": "Lazer", "descricao": "Balada", "valor": 131.25, "origem": "manual"}, {"data": "2026-07-05", "categoria": "Compras/pessoal", "descricao": "Shopee", "valor": 245.16, "origem": "telegram"}, {"data": "2026-07-06", "categoria": "Lazer", "descricao": "Cinema", "valor": 95.86, "origem": "telegram"}, {"data": "2026-07-10", "categoria": "Outros", "descricao": "Imprevisto", "valor": 87.16, "origem": "manual"}, {"data": "2026-07-11", "categoria": "Lazer", "descricao": "Show", "valor": 134.66, "origem": "telegram"}, {"data": "2026-07-14", "categoria": "Saúde/bem-estar", "descricao": "Farmácia", "valor": 104.98, "origem": "manual"}, {"data": "2026-07-15", "categoria": "Alimentação", "descricao": "Restaurante", "valor": 31.37, "origem": "telegram"}, {"data": "2026-07-17", "categoria": "Outros", "descricao": "Presente", "valor": 37.24, "origem": "manual"}, {"data": "2026-07-20", "categoria": "Alimentação", "descricao": "Pão de Açúcar", "valor": 27.48, "origem": "telegram"}, {"data": "2026-07-24", "categoria": "Transporte", "descricao": "Combustível", "valor": 46.51, "origem": "manual"}, {"data": "2026-07-29", "categoria": "Lazer", "descricao": "Streaming avulso", "valor": 129.24, "origem": "telegram"}, {"data": "2026-07-30", "categoria": "Transporte", "descricao": "99", "valor": 11.9, "origem": "telegram"}, {"data": "2026-08-01", "categoria": "Alimentação", "descricao": "Mercado", "valor": 25.93, "origem": "telegram"}, {"data": "2026-08-03", "categoria": "Compras/pessoal", "descricao": "Livraria", "valor": 182.91, "origem": "telegram"}, {"data": "2026-08-05", "categoria": "Saúde/bem-estar", "descricao": "Consulta", "valor": 227.39, "origem": "manual"}, {"data": "2026-08-08", "categoria": "Saúde/bem-estar", "descricao": "Consulta", "valor": 113.68, "origem": "manual"}, {"data": "2026-08-10", "categoria": "Alimentação", "descricao": "Padaria", "valor": 29.3, "origem": "manual"}, {"data": "2026-08-11", "categoria": "Transporte", "descricao": "Uber", "valor": 13.17, "origem": "telegram"}, {"data": "2026-08-14", "categoria": "Alimentação", "descricao": "Mercado", "valor": 57.51, "origem": "telegram"}, {"data": "2026-08-17", "categoria": "Lazer", "descricao": "Cinema", "valor": 118.2, "origem": "telegram"}];
+
+  const root = document.getElementById("vizRoot");
+  const cssVar = (name) => getComputedStyle(root).getPropertyValue(name).trim();
+  const catColor = (nome) => {
+    const c = CATS.find(c => c.nome === nome);
+    return cssVar(c ? c.cor : OUTROS_COR);
+  };
+  const brl = (v) => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+  const brlCompact = (v) => {
+    if (Math.abs(v) >= 1000) return (v/1000).toLocaleString("pt-BR", {maximumFractionDigits:1}) + "k";
+    return v.toLocaleString("pt-BR", { maximumFractionDigits: 0 });
+  };
+  const monthLabel = (key) => {
+    const [y, m] = key.split("-").map(Number);
+    const d = new Date(y, m - 1, 1);
+    const s = d.toLocaleDateString("pt-BR", { month: "long", year: "numeric" });
+    return s.charAt(0).toUpperCase() + s.slice(1);
+  };
+  const daysInMonth = (key) => {
+    const [y, m] = key.split("-").map(Number);
+    return new Date(y, m, 0).getDate();
+  };
+
+  // ---------------------------------------------------------------------
+  // Carregamento e parsing de dados (embutido ou CSV publicado do Sheets)
+  // ---------------------------------------------------------------------
+  function parseNumeroBR(raw) {
+    if (typeof raw === "number") return raw;
+    let s = String(raw).trim().replace(/[R$\s]/g, "");
+    if (/^-?\d{1,3}(\.\d{3})*,\d+$/.test(s)) s = s.replace(/\./g, "").replace(",", ".");
+    else if (/^-?\d+,\d+$/.test(s)) s = s.replace(",", ".");
+    return parseFloat(s) || 0;
+  }
+
+  function parseCSV(text) {
+    const rows = [];
+    let row = [], field = "", inQuotes = false;
+    for (let i = 0; i < text.length; i++) {
+      const c = text[i];
+      if (inQuotes) {
+        if (c === '"') { if (text[i+1] === '"') { field += '"'; i++; } else inQuotes = false; }
+        else field += c;
+      } else {
+        if (c === '"') inQuotes = true;
+        else if (c === ",") { row.push(field); field = ""; }
+        else if (c === "\n" || c === "\r") {
+          if (field !== "" || row.length) { row.push(field); rows.push(row); row = []; field = ""; }
+          if (c === "\r" && text[i+1] === "\n") i++;
+        } else field += c;
+      }
+    }
+    if (field !== "" || row.length) { row.push(field); rows.push(row); }
+    if (!rows.length) return [];
+    const headers = rows[0].map(h => h.trim().toLowerCase());
+    return rows.slice(1).filter(r => r.length && r.some(x => x !== "")).map(r => {
+      const rec = {};
+      headers.forEach((h, idx) => rec[h] = r[idx] !== undefined ? r[idx].trim() : "");
+      return {
+        data: rec.data || rec.date,
+        categoria: rec.categoria || rec.category,
+        descricao: rec.descricao || rec["descrição"] || rec.description,
+        valor: parseNumeroBR(rec.valor || rec.value),
+        origem: rec.origem || rec.source || "manual",
+      };
+    });
+  }
+
+  function normalize(records) {
+    return records
+      .map(r => ({ ...r, valor: typeof r.valor === "number" ? r.valor : parseNumeroBR(r.valor) }))
+      .filter(r => r.data && r.categoria && !isNaN(r.valor))
+      .sort((a, b) => a.data.localeCompare(b.data));
+  }
+
+  function init(records, sourceLabel) {
+    const DATA = normalize(records);
+    document.getElementById("sourceNote").textContent = sourceLabel;
+    if (sourceLabel.startsWith("amostra")) {
+      document.getElementById("dataBadge").textContent = "dados de exemplo";
+    } else {
+      document.getElementById("dataBadge").textContent = "dados ao vivo";
+    }
+    build(DATA);
+  }
+
+  if (SHEET_CSV_URL) {
+    fetch(SHEET_CSV_URL)
+      .then(r => r.text())
+      .then(text => init(parseCSV(text), "Google Sheets (link publicado)"))
+      .catch(() => init(SAMPLE_DATA, "amostra embutida — falha ao buscar a planilha, veja SHEET_CSV_URL"));
+  } else {
+    init(SAMPLE_DATA, "amostra embutida (SAMPLE_DATA)");
+  }
+
+  // ---------------------------------------------------------------------
+  // Construção do dashboard
+  // ---------------------------------------------------------------------
+  function build(DATA) {
+    const byMonth = {};
+    DATA.forEach(r => {
+      const mk = r.data.slice(0, 7);
+      (byMonth[mk] = byMonth[mk] || []).push(r);
+    });
+    const months = Object.keys(byMonth).sort();
+    if (!months.length) return;
+
+    const monthTotals = months.map(mk => byMonth[mk].reduce((s, r) => s + r.valor, 0));
+    const monthSelect = document.getElementById("monthSelect");
+    months.forEach(mk => {
+      const opt = document.createElement("option");
+      opt.value = mk; opt.textContent = monthLabel(mk);
+      monthSelect.appendChild(opt);
+    });
+    monthSelect.value = months[months.length - 1];
+
+    function categoryTotalsForMonth(mk) {
+      const totals = {};
+      (byMonth[mk] || []).forEach(r => { totals[r.categoria] = (totals[r.categoria] || 0) + r.valor; });
+      return totals;
+    }
+
+    function renderAll() {
+      const mk = monthSelect.value;
+      const idx = months.indexOf(mk);
+      renderKPIs(mk, idx);
+      renderCategoryBar(mk);
+    }
+
+    function renderKPIs(mk, idx) {
+      const total = monthTotals[idx];
+      const prevTotal = idx > 0 ? monthTotals[idx - 1] : null;
+      const catTotals = categoryTotalsForMonth(mk);
+      const topCat = Object.entries(catTotals).sort((a, b) => b[1] - a[1])[0];
+      const count = (byMonth[mk] || []).length;
+      const todayMonthKey = new Date().toISOString().slice(0, 7);
+      const dayBase = mk === todayMonthKey ? new Date().getDate() : daysInMonth(mk);
+      const avgDaily = total / dayBase;
+
+      let deltaHTML = "";
+      if (prevTotal !== null && prevTotal > 0) {
+        const pct = ((total - prevTotal) / prevTotal) * 100;
+        const up = pct > 0;
+        const arrow = up ? "▲" : "▼";
+        deltaHTML = `<div class="delta ${up ? "up" : "down"}">${arrow} ${Math.abs(pct).toFixed(1)}% <span class="ref">vs. ${monthLabel(months[idx-1])}</span></div>`;
+      } else {
+        deltaHTML = `<div class="delta"><span class="ref">sem mês anterior para comparar</span></div>`;
+      }
+
+      const kpiRow = document.getElementById("kpiRow");
+      kpiRow.innerHTML = "";
+      const tiles = [
+        { label: "Total gasto no mês", value: brl(total), extra: deltaHTML },
+        { label: "Média diária", value: brl(avgDaily), extra: `<div class="sub">com base em ${dayBase} dia(s)</div>` },
+        { label: "Categoria com maior gasto", value: topCat ? topCat[0] : "—", extra: `<div class="sub">${topCat ? brl(topCat[1]) : ""}</div>`, dot: topCat ? topCat[0] : null },
+        { label: "Lançamentos no mês", value: String(count), extra: `<div class="sub">registros na planilha</div>` },
+      ];
+      tiles.forEach(t => {
+        const div = document.createElement("div");
+        div.className = "tile";
+        div.innerHTML = `<div class="label">${t.label}</div><div class="value">${t.dot ? `<span class="cat-dot" style="background:${catColor(t.dot)}"></span>` : ""}${t.value}</div>${t.extra}`;
+        kpiRow.appendChild(div);
+      });
+    }
+
+    // ---------------- Category bar chart (selected month) ----------------
+    function renderCategoryBar(mk) {
+      document.getElementById("catChartTitle").textContent = `Gasto por categoria — ${monthLabel(mk)}`;
+      const totals = categoryTotalsForMonth(mk);
+      const entries = Object.entries(totals).sort((a, b) => b[1] - a[1]);
+      const max = entries.length ? entries[0][1] : 1;
+      const w = 640, barH = 22, gap = 14, leftPad = 120, rightPad = 60, topPad = 6;
+      const h = entries.length * (barH + gap) + topPad;
+
+      let svg = `<svg viewBox="0 0 ${w} ${Math.max(h, 40)}" width="100%" height="${Math.max(h, 40)}" role="img" aria-label="Gasto por categoria em ${monthLabel(mk)}">`;
+      entries.forEach(([cat, val], i) => {
+        const y = topPad + i * (barH + gap);
+        const barW = Math.max(2, (val / max) * (w - leftPad - rightPad));
+        const color = catColor(cat);
+        svg += `<text x="${leftPad - 10}" y="${y + barH/2 + 4}" text-anchor="end">${escXML(cat)}</text>`;
+        svg += `<g class="bar-hit" data-cat="${escAttr(cat)}" data-val="${val}" style="cursor:pointer">`;
+        svg += `<rect x="${leftPad}" y="${y}" width="${barW}" height="${barH}" rx="4" fill="${color}"></rect>`;
+        svg += `<rect x="${leftPad}" y="${y}" width="${Math.max(barW, 60)}" height="${barH}" fill="transparent"></rect>`;
+        svg += `</g>`;
+        const labelX = leftPad + barW + 8;
+        svg += `<text x="${labelX}" y="${y + barH/2 + 4}" class="muted">${brl(val)}</text>`;
+      });
+      svg += `</svg>`;
+      const wrap = document.getElementById("catChart");
+      wrap.innerHTML = svg;
+
+      wrap.querySelectorAll(".bar-hit").forEach(g => {
+        g.addEventListener("pointermove", (e) => showTooltip(e, [{ label: g.dataset.cat, value: brl(+g.dataset.val), color: catColor(g.dataset.cat) }]));
+        g.addEventListener("pointerleave", hideTooltip);
+      });
+
+      buildTableTwin("catChart", ["Categoria", "Valor"], entries.map(([cat, val]) => [cat, brl(val)]));
+    }
+
+    // ---------------- Trend line chart (all months) ----------------
+    function renderTrendLine() {
+      const w = 700, h = 220, padL = 56, padR = 20, padT = 16, padB = 30;
+      const plotW = w - padL - padR, plotH = h - padT - padB;
+      const max = Math.max(...monthTotals) * 1.15;
+      const x = (i) => padL + (months.length === 1 ? plotW/2 : (i / (months.length - 1)) * plotW);
+      const y = (v) => padT + plotH - (v / max) * plotH;
+
+      const gridSteps = 4;
+      let svg = `<svg viewBox="0 0 ${w} ${h}" width="100%" height="${h}" role="img" aria-label="Evolução do gasto total por mês">`;
+      for (let i = 0; i <= gridSteps; i++) {
+        const gv = (max / gridSteps) * i;
+        const gy = y(gv);
+        svg += `<line class="grid-line" x1="${padL}" x2="${w - padR}" y1="${gy}" y2="${gy}" stroke-width="1"></line>`;
+        svg += `<text x="${padL - 8}" y="${gy + 4}" text-anchor="end" class="muted">${brlCompact(gv)}</text>`;
+      }
+      months.forEach((mk, i) => {
+        svg += `<text x="${x(i)}" y="${h - 8}" text-anchor="middle" class="muted">${monthLabel(mk).split(" ")[0].slice(0,3)}</text>`;
+      });
+      let path = "";
+      months.forEach((mk, i) => { path += (i === 0 ? "M" : "L") + x(i).toFixed(1) + "," + y(monthTotals[i]).toFixed(1) + " "; });
+      const color = cssVar("--series-alimentacao");
+      svg += `<path d="${path}" fill="none" stroke="${color}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"></path>`;
+      months.forEach((mk, i) => {
+        svg += `<circle cx="${x(i)}" cy="${y(monthTotals[i])}" r="4" fill="${color}" stroke="${cssVar('--surface-1')}" stroke-width="2"></circle>`;
+      });
+      svg += `<line id="crosshair" x1="0" x2="0" y1="${padT}" y2="${padT+plotH}" stroke="${cssVar('--axis')}" stroke-width="1" style="display:none"></line>`;
+      svg += `<rect id="trendHit" x="${padL}" y="${padT}" width="${plotW}" height="${plotH}" fill="transparent"></rect>`;
+      svg += `</svg>`;
+      const wrap = document.getElementById("trendChart");
+      wrap.innerHTML = svg;
+
+      const svgEl = wrap.querySelector("svg");
+      const hit = wrap.querySelector("#trendHit");
+      const crosshair = wrap.querySelector("#crosshair");
+      hit.addEventListener("pointermove", (e) => {
+        const rect = svgEl.getBoundingClientRect();
+        const relX = ((e.clientX - rect.left) / rect.width) * w;
+        let idx = 0, best = Infinity;
+        months.forEach((mk, i) => { const d = Math.abs(x(i) - relX); if (d < best) { best = d; idx = i; } });
+        crosshair.setAttribute("x1", x(idx)); crosshair.setAttribute("x2", x(idx));
+        crosshair.style.display = "block";
+        showTooltip(e, [{ label: monthLabel(months[idx]), value: brl(monthTotals[idx]), color }]);
+      });
+      hit.addEventListener("pointerleave", () => { crosshair.style.display = "none"; hideTooltip(); });
+
+      buildTableTwin("trendChart", ["Mês", "Total gasto"], months.map((mk, i) => [monthLabel(mk), brl(monthTotals[i])]));
+    }
+
+    // ---------------- Stacked bar chart: composition per month ----------------
+    function renderStackedByMonth() {
+      const presentCats = CAT_ORDER.filter(c => DATA.some(r => r.categoria === c));
+      const w = 700, h = 260, padL = 56, padR = 20, padT = 16, padB = 30, gapPx = 2;
+      const plotW = w - padL - padR, plotH = h - padT - padB;
+      const max = Math.max(...monthTotals) * 1.08;
+      const barSlot = plotW / months.length;
+      const barW = Math.min(48, barSlot * 0.55);
+
+      let svg = `<svg viewBox="0 0 ${w} ${h}" width="100%" height="${h}" role="img" aria-label="Composição do gasto por categoria, mês a mês">`;
+      const gridSteps = 4;
+      for (let i = 0; i <= gridSteps; i++) {
+        const gv = (max / gridSteps) * i;
+        const gy = padT + plotH - (gv / max) * plotH;
+        svg += `<line class="grid-line" x1="${padL}" x2="${w - padR}" y1="${gy}" y2="${gy}" stroke-width="1"></line>`;
+        svg += `<text x="${padL - 8}" y="${gy + 4}" text-anchor="end" class="muted">${brlCompact(gv)}</text>`;
+      }
+
+      months.forEach((mk, mi) => {
+        const cx = padL + barSlot * mi + barSlot / 2 - barW / 2;
+        const totals = categoryTotalsForMonth(mk);
+        let yCursor = padT + plotH;
+        presentCats.forEach(cat => {
+          const val = totals[cat] || 0;
+          if (val <= 0) return;
+          const segH = Math.max(0, (val / max) * plotH - gapPx);
+          const segY = yCursor - segH;
+          svg += `<g class="seg-hit" data-cat="${escAttr(cat)}" data-val="${val}" data-month="${escAttr(monthLabel(mk))}" style="cursor:pointer">`;
+          svg += `<rect x="${cx}" y="${segY}" width="${barW}" height="${segH}" fill="${catColor(cat)}"></rect>`;
+          svg += `</g>`;
+          yCursor -= (segH + gapPx);
+        });
+        svg += `<text x="${cx + barW/2}" y="${h - 8}" text-anchor="middle" class="muted">${monthLabel(mk).split(" ")[0].slice(0,3)}</text>`;
+      });
+      svg += `</svg>`;
+      const wrap = document.getElementById("stackChart");
+      wrap.innerHTML = svg;
+      wrap.querySelectorAll(".seg-hit").forEach(g => {
+        g.addEventListener("pointermove", (e) => showTooltip(e, [
+          { label: g.dataset.cat, value: brl(+g.dataset.val), color: catColor(g.dataset.cat) },
+        ], g.dataset.month));
+        g.addEventListener("pointerleave", hideTooltip);
+      });
+
+      const legend = document.createElement("div");
+      legend.className = "legend";
+      presentCats.forEach(cat => {
+        const item = document.createElement("div");
+        item.className = "legend-item";
+        item.innerHTML = `<span class="legend-swatch" style="background:${catColor(cat)}"></span>${cat}`;
+        legend.appendChild(item);
+      });
+      wrap.appendChild(legend);
+
+      const rows = [];
+      months.forEach(mk => {
+        const totals = categoryTotalsForMonth(mk);
+        presentCats.forEach(cat => { if (totals[cat]) rows.push([monthLabel(mk), cat, brl(totals[cat])]); });
+      });
+      buildTableTwin("stackChart", ["Mês", "Categoria", "Valor"], rows);
+    }
+
+    // ---------------- Recent transactions table ----------------
+    function renderRecentTable() {
+      const recent = [...DATA].sort((a, b) => b.data.localeCompare(a.data)).slice(0, 15);
+      const container = document.getElementById("recentTable");
+      let html = `<table class="simple-table"><thead><tr><th>Data</th><th>Categoria</th><th>Descrição</th><th style="text-align:right">Valor</th><th>Origem</th></tr></thead><tbody>`;
+      recent.forEach(r => {
+        const [y, m, d] = r.data.split("-");
+        html += `<tr>
+          <td>${d}/${m}/${y}</td>
+          <td><span class="cat-dot" style="background:${catColor(r.categoria)}"></span>${escXML(r.categoria)}</td>
+          <td>${escXML(r.descricao || "")}</td>
+          <td class="num">${brl(r.valor)}</td>
+          <td><span class="origem-tag">${escXML(r.origem || "manual")}</span></td>
+        </tr>`;
+      });
+      html += `</tbody></table>`;
+      container.innerHTML = html;
+    }
+
+    // ---------------- Table-view twin (accessibility) ----------------
+    function buildTableTwin(containerId, headers, rows) {
+      const wrap = document.getElementById(containerId);
+      let table = document.createElement("table");
+      table.className = "simple-table hidden";
+      table.dataset.twinFor = containerId;
+      let thead = "<thead><tr>" + headers.map(h => `<th>${h}</th>`).join("") + "</tr></thead>";
+      let tbody = "<tbody>" + rows.map(r => "<tr>" + r.map((c,i) => `<td class="${i>0?'num':''}">${c}</td>`).join("") + "</tr>").join("") + "</tbody>";
+      table.innerHTML = thead + tbody;
+      wrap.appendChild(table);
+    }
+
+    document.querySelectorAll(".table-toggle").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const target = document.getElementById(btn.dataset.target);
+        const svgEl = target.querySelector("svg");
+        const legendEl = target.querySelector(".legend");
+        const tableEl = target.querySelector("table");
+        const showingTable = tableEl && !tableEl.classList.contains("hidden");
+        if (showingTable) {
+          tableEl.classList.add("hidden");
+          if (svgEl) svgEl.classList.remove("hidden");
+          if (legendEl) legendEl.classList.remove("hidden");
+          btn.textContent = "Ver tabela";
+        } else {
+          if (svgEl) svgEl.classList.add("hidden");
+          if (legendEl) legendEl.classList.add("hidden");
+          if (tableEl) tableEl.classList.remove("hidden");
+          btn.textContent = "Ver gráfico";
+        }
+      });
+    });
+
+    // ---------------- Tooltip ----------------
+    const tooltipEl = document.getElementById("tooltip");
+    function showTooltip(e, rows, heading) {
+      let html = "";
+      if (heading) html += `<div style="color:${cssVar('--text-muted')};font-size:11px;margin-bottom:3px">${escXML(heading)}</div>`;
+      rows.forEach(r => {
+        html += `<div class="t-row"><span class="t-key" style="background:${r.color}"></span><span>${escXML(r.label)}</span>&nbsp;<span class="t-value">${r.value}</span></div>`;
+      });
+      tooltipEl.innerHTML = html;
+      tooltipEl.style.opacity = "1";
+      const rootRect = root.getBoundingClientRect();
+      tooltipEl.style.left = (e.clientX - rootRect.left + 14) + "px";
+      tooltipEl.style.top = (e.clientY - rootRect.top - 10) + "px";
+    }
+    function hideTooltip() { tooltipEl.style.opacity = "0"; }
+
+    monthSelect.addEventListener("change", renderAll);
+    renderAll();
+    renderTrendLine();
+    renderStackedByMonth();
+    renderRecentTable();
+  }
+
+  function escXML(s) { const d = document.createElement("div"); d.textContent = String(s); return d.innerHTML; }
+  function escAttr(s) { return String(s).replace(/"/g, "&quot;"); }
+
+  // ---------------- Theme toggle ----------------
+  const themeBtn = document.getElementById("themeToggle");
+  themeBtn.addEventListener("click", () => {
+    const cur = document.documentElement.getAttribute("data-theme");
+    if (cur === "dark") { document.documentElement.setAttribute("data-theme", "light"); themeBtn.textContent = "🌙 Modo escuro"; }
+    else { document.documentElement.setAttribute("data-theme", "dark"); themeBtn.textContent = "☀️ Modo claro"; }
+  });
+})();
+</script>
+</body>
+</html>
