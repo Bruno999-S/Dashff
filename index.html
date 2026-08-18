@@ -170,6 +170,15 @@
   .card-head { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 4px; }
   .card-head h2 { font-size: 15px; margin: 0; font-weight: 600; }
   .card-head .cap { font-size: 12px; color: var(--text-muted); }
+  .empty-state {
+    background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px;
+    padding: 48px 24px; margin-bottom: 18px; backdrop-filter: blur(var(--card-blur));
+    box-shadow: 0 0 32px var(--glow), inset 0 1px 0 rgba(255,255,255,0.03);
+    text-align: center;
+  }
+  .empty-state .icon { font-size: 34px; margin-bottom: 10px; }
+  .empty-state h2 { font-size: 17px; margin: 0 0 6px; font-weight: 600; }
+  .empty-state p { font-size: 13.5px; color: var(--text-secondary); max-width: 440px; margin: 0 auto; }
   .table-toggle {
     font-size: 11.5px; color: var(--text-secondary); background: none; border: 1px solid var(--border);
     border-radius: 6px; padding: 3px 8px; cursor: pointer;
@@ -235,6 +244,13 @@
     <p>O que eu gasto, com quem eu gasto, quanto eu gasto — atualizado a partir da planilha alimentada pelo bot do Telegram.</p>
   </header>
 
+  <div class="empty-state" id="emptyState" style="display:none">
+    <div class="icon">🧾</div>
+    <h2>Nenhum gasto registrado ainda</h2>
+    <p>Assim que você mandar a primeira mensagem pro bot do Telegram, o gasto aparece aqui automaticamente.</p>
+  </div>
+
+  <div id="mainContent">
   <div class="filters">
     <label for="monthSelect">Mês em foco</label>
     <select id="monthSelect"></select>
@@ -285,6 +301,7 @@
     </div>
     <div class="cap">Os 15 gastos mais recentes registrados</div>
     <div id="recentTable"></div>
+  </div>
   </div>
 
   <footer class="note">
@@ -446,7 +463,15 @@
       (byMonth[mk] = byMonth[mk] || []).push(r);
     });
     const months = Object.keys(byMonth).sort();
-    if (!months.length) return;
+    const emptyState = document.getElementById("emptyState");
+    const mainContent = document.getElementById("mainContent");
+    if (!months.length) {
+      emptyState.style.display = "block";
+      mainContent.style.display = "none";
+      return;
+    }
+    emptyState.style.display = "none";
+    mainContent.style.display = "block";
 
     const monthTotals = months.map(mk => byMonth[mk].reduce((s, r) => s + r.valor, 0));
     const monthSelect = document.getElementById("monthSelect");
